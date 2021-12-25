@@ -2,7 +2,7 @@ const notationFactory = () => {
   let moveCount = 1;
   let moves = {};
 
-  let pieceData = {
+  const pieceData = {
     pawn: "",
     knight: "N",
     bishop: "B",
@@ -11,7 +11,7 @@ const notationFactory = () => {
     king: "K"
   };
 
-  let rowData = {
+  const rowData = {
     0: "8",
     1: "7",
     2: "6",
@@ -22,7 +22,7 @@ const notationFactory = () => {
     7: "1"
   };
 
-  let colData = {
+  const colData = {
     0: "a",
     1: "b",
     2: "c",

@@ -1,6 +1,12 @@
 import React from "react";
 import styled from "styled-components";
 
+const Wrapper = styled.div`
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+`;
+
 const ULWrapper = styled.ul`
   list-style-type: none;
   width: 300px;
@@ -27,7 +33,7 @@ const LIWrapper = styled.li`
   }
 
   .move:hover {
-    background: yellow;
+    background: rgb(227, 195, 65);
   }
 `;
 
@@ -60,7 +66,12 @@ const Notation = ({ data, handleNotationClick }) => {
     moves.push(thing);
   }
 
-  return <ULWrapper>{moves}</ULWrapper>;
+  return (
+    <Wrapper>
+      Moves
+      <ULWrapper>{moves}</ULWrapper>
+    </Wrapper>
+  );
 };
 
 export default Notation;

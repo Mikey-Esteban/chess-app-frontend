@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import styled from "styled-components";
+import axios from 'axios'
 
 import "./App.css";
 
@@ -10,6 +11,7 @@ import isCheck from "../../assets/sounds/isCheck.wav";
 import isCheckError from "../../assets/sounds/isCheckError.wav";
 // helpers
 import toTitleCase from "../helpers/toTitleCase";
+import turnIdToPosition from "../helpers/turnIdToPosition";
 // components
 import Board from "../Board/Board";
 import Promotion from "../Board/Promotion/Promotion";
@@ -18,16 +20,18 @@ import Notation from "../Notation/Notation";
 // factories
 import gameFactory from "../../factories/gameFactory";
 
-const game = gameFactory();
+let pythonUrl = 'http://127.0.0.1:5000/fen/'
+
+let game = gameFactory();
 const chessPieceLandAudio = new Audio(chessPieceLanding);
 const chessPieceEatAudio = new Audio(chessPieceEat);
 const isCheckAudio = new Audio(isCheck);
 const isCheckErrorAudio = new Audio(isCheckError);
 
 const MARGIN_TOP = "100px";
+const BOX_SIZE = 60;
 
 const Wrapper = styled.div`
-  margin-top: ${MARGIN_TOP};
   margin-left: 100px;
 `;
 
@@ -66,6 +70,12 @@ const App = () => {
   const [board, setBoard] = useState(game.getBoard());
   const [pause, setPause] = useState(false);
 
+  // board UI states
+  const [activePieceTile, setActivePieceTile] = useState(null);
+  const [activeStartSquare, setActiveStartSquare] = useState(null);
+  const [activeLandSquare, setActiveLandSquare] = useState(null);
+  const [activeCanLandOn, setActiveCanLandOn] = useState(null);
+
   // promote pawn states
   const [promotePawn, setPromotePawn] = useState({});
   const [showPromotionBoard, setShowPromotionBoard] = useState(false);
@@ -78,11 +88,124 @@ const App = () => {
   const [whitePlayerEats, setWhitePlayerEats] = useState([]);
   const [blackPlayerEats, setBlackPlayerEats] = useState([]);
 
-  const handlePawnPromotion = (piece, color) => event => {
-    setPromotePawn(null);
-    game.promotePawnTo(promotePawn, piece, color);
-    setShowPromotionBoard(false);
+  ////////////////////////
+  ////// BOARD UI FUNCTIONS
+  ///////////////////
+
+  const grabChessPiece = e => {
+    if (e.target.classList.contains("chessPiece") && !pause) {
+      const id = e.target.parentNode.id;
+      const position = turnIdToPosition(id);
+      const goodMoves = game.getGoodPieceMoves(position);
+      setActiveCanLandOn(goodMoves);
+      const piece = game.getGameboard().getPiece(position);
+      const pieceColor = piece.color;
+      if (pieceColor === currentPlayer) {
+        setActivePieceTile(e.target);
+        setActiveStartSquare(e.target.parentNode.id);
+      } else {
+        setMessage("You can only select your own piece!");
+      }
+    }
   };
+
+  const centerPiece = (pieceTile, position) => {
+    if (activePieceTile) {
+      const square_id = `[${position[0]}][${position[1]}]`;
+      const square = document.getElementById(square_id);
+
+      pieceTile.style.top = `${square.offsetTop}px`;
+      pieceTile.style.left = `${square.offsetLeft}px`;
+    }
+  };
+
+  const grabCurrentSquare = e => {
+    let flag = true;
+    // grab board div
+    let node = e.target;
+    while (flag) {
+      node.classList.contains("board")
+        ? (flag = false)
+        : (node = node.parentNode);
+    }
+    // find board position on page
+    const domRect = node.getBoundingClientRect();
+    const rectTop = domRect.top;
+    const rectLeft = domRect.left;
+
+    const x = e.clientX;
+    const y = e.clientY;
+
+    const row = Math.trunc((y - rectTop) / BOX_SIZE);
+    const col = Math.trunc((x - rectLeft) / BOX_SIZE);
+    return [row, col];
+  };
+
+  const grabPreviousSquare = e => {
+    const id = e.target.parentNode.id;
+    const row = Number(id[1]);
+    const col = Number(id[4]);
+    return [row, col];
+  };
+
+  const releaseChessPiece = e => {
+    if (activePieceTile) {
+      const pieceTile = activePieceTile;
+      setActivePieceTile(null);
+      setActiveCanLandOn([]);
+      const landSquare = grabCurrentSquare(e);
+      setActiveLandSquare(`[${landSquare[0]}][${landSquare[1]}]`);
+
+      const oldSquare = grabPreviousSquare(e);
+      const newSquare = grabCurrentSquare(e);
+
+      const flag = checkIfLegalMove(oldSquare, newSquare);
+      if (flag === false) {
+        centerPiece(pieceTile, oldSquare);
+        setActiveLandSquare(`[${oldSquare[0]}][${oldSquare[1]}]`);
+      }
+    }
+  };
+
+  const moveChessPiece = e => {
+    if (activePieceTile) {
+      const element = activePieceTile;
+      const x = e.clientX;
+      const y = e.clientY;
+      element.style.position = "absolute";
+      element.style.left = `${x - BOX_SIZE / 2}px`;
+      element.style.top = `${y - BOX_SIZE / 2}px`;
+    }
+  };
+
+  /////////////////////
+  //// NEW GAME BUTTON UI
+  ////////////////
+
+  const handleButtonClick = () => {
+    game = gameFactory();
+    setCurrentPlayer(game.getCurrentPlayer());
+    setIsChecked(false);
+    setIsGameOver(false);
+    setBoard(game.getBoard());
+    setPause(false);
+    setPromotePawn({});
+    setShowPromotionBoard(false);
+    setMessage("White's turn to play");
+    setErrorSquare([]);
+    setWhitePlayerEats([]);
+    setBlackPlayerEats([]);
+    setActivePieceTile(null);
+    setActiveStartSquare(null);
+    setActiveLandSquare(null);
+    setActiveCanLandOn(null);
+
+    console.log("game is now", game);
+  };
+
+  //////////////////////
+  ///// NOTATION UI
+  ///////////////////
 
   const handleNotationClick = e => {
     let li = e.target.parentNode;
@@ -108,6 +231,16 @@ const App = () => {
     }
   };
 
+  /////////////////////
+  //// GAME FUNCTIONS
+  ////////////////
+
+  const handlePawnPromotion = (piece, color) => event => {
+    setPromotePawn(null);
+    game.promotePawnTo(promotePawn, piece, color);
+    setShowPromotionBoard(false);
+  };
+
   const resetTurn = (piece, start, end, message) => {
     game.getGameboard().resetPiece(piece, start, start);
     setMessage(message);
@@ -128,7 +261,7 @@ const App = () => {
       resetTurn(piece, start, end, message);
 
       if (showErrorSquare) {
-        const kingSquare = game.getGameboard().findKingSquare(currentPlayer);
+        const kingSquare = game.getGameboard().getKingSquare(currentPlayer);
         setErrorSquare(kingSquare);
       }
     }
@@ -188,12 +321,39 @@ const App = () => {
         setIsGameOver(true);
       }
     }
+
+    console.log("MOVE PLAYED, fens", game.getLastFen());
   };
+
+
+  // replace fen with periods to send to python script
+  const fenWithPeriods = () =>  game.getLastFen().replace(/\//g, '.')
+
+  const checkPythonMove = () => {
+    axios.get(`http://127.0.0.1:5000/fen/${fenWithPeriods()}`)
+      .then(resp => {
+        const bestMove = resp.data.best_move
+        console.log(game.getStartAndEndFromMove(bestMove))
+        let [ startNote, endNote ] = game.getStartAndEndFromMove(bestMove)
+        let startPos = game.getBoardPosFromNotation(startNote)
+        let endPos = game.getBoardPosFromNotation(endNote)
+        const piece = game.getGameboard().getPiece(startPos)
+        console.log('PIECE', piece)
+        console.log('GAMEBOARD START END', startPos, endPos)
+        playTurn(piece, startPos, endPos, 'uhhhh')
+
+      })
+      .catch(error => console.log(error))
+    // window.open(`http://127.0.0.1:5000/fen/${fenWithPeriods()}`)
+  }
+
 
   return (
     <Wrapper>
       <div id="currentPlayer">
         {toTitleCase(`${currentPlayer} turn to move`)}
+        <button onClick={handleButtonClick}>New Game</button>
+        <button onClick={checkPythonMove}>press me</button>
       </div>
       <div id="moveMessage">{message}</div>
       <BlackPlayerBoardWrapper>
@@ -217,6 +377,13 @@ const App = () => {
           gameOver={isGameOver}
           game={game}
           pause={pause}
+          activePieceTile={activePieceTile}
+          activeStartSquare={activeStartSquare}
+          activeLandSquare={activeLandSquare}
+          activeCanLandOn={activeCanLandOn}
+          grabChessPiece={grabChessPiece}
+          releaseChessPiece={releaseChessPiece}
+          moveChessPiece={moveChessPiece}
         />
         <Notation
           data={game.getNotation().getMoves()}

@@ -17,6 +17,76 @@ const boardFactory = () => {
     [null, null, null, null, null, null, null, null]
   ];
 
+  ///////////////////
+  /// GETTERS ////
+  //////////
+
+  const getPiece = position => {
+    return board[position[0]][position[1]];
+  };
+
+  const getKingSquare = color => {
+    let i = 0;
+    while (i < 8) {
+      let j = 0;
+      while (j < 8) {
+        const piece = getPiece([i, j]);
+        if (piece && piece.type === "king" && piece.color === color) {
+          let square = [i, j];
+          return square;
+        }
+        j += 1;
+      }
+      i += 1;
+    }
+  };
+
+  const getKing = color => {
+    let i = 0;
+    while (i < 8) {
+      let j = 0;
+      while (j < 8) {
+        const piece = getPiece([i, j]);
+        if (piece && piece.type === "king" && piece.color === color) {
+          piece.square = [i, j];
+          return piece;
+        }
+        j += 1;
+      }
+      i += 1;
+    }
+  };
+
+  const getEnPassantSquare = (start, end) => {
+    let max = Math.max(start[0], end[0]);
+    const square = [max - 1, start[1]];
+    return square;
+  };
+
+  const getAllPiecesOfColor = color => {
+    // returns array of object with piece and square
+    const pieces = [];
+    let i = 0;
+    while (i < 8) {
+      let j = 0;
+      while (j < 8) {
+        const piece = getPiece([i, j]);
+        if (piece && piece.color === color) {
+          piece.square = [i, j];
+          pieces.push(piece);
+        }
+        j += 1;
+      }
+      i += 1;
+    }
+
+    return pieces;
+  };
+
+  ///////////////////
+  /// SETTERS ////
+  //////////
+
   const createSave = () => {
     let result = [];
     board.forEach(row => {
@@ -49,73 +119,15 @@ const boardFactory = () => {
     board[end[0]][end[1]] = piece;
   };
 
-  const getPiece = position => {
-    return board[position[0]][position[1]];
-  };
+  ///////////////////
+  /// BOOLEANS ////
+  //////////
 
   const isSquareInbounds = square => {
     if (square[0] < 0 || square[0] > 7 || square[1] < 0 || square[1] > 7) {
       return false;
     }
     return true;
-  };
-
-  const findKingSquare = color => {
-    let i = 0;
-    while (i < 8) {
-      let j = 0;
-      while (j < 8) {
-        const piece = getPiece([i, j]);
-        if (piece && piece.type === "king" && piece.color === color) {
-          let square = [i, j];
-          return square;
-        }
-        j += 1;
-      }
-      i += 1;
-    }
-  };
-
-  const grabKing = color => {
-    let i = 0;
-    while (i < 8) {
-      let j = 0;
-      while (j < 8) {
-        const piece = getPiece([i, j]);
-        if (piece && piece.type === "king" && piece.color === color) {
-          piece.square = [i, j];
-          return piece;
-        }
-        j += 1;
-      }
-      i += 1;
-    }
-  };
-
-  const findEnPassantSquare = (start, end) => {
-    let max = Math.max(start[0], end[0]);
-    const square = [max - 1, start[1]];
-    return square;
-  };
-
-  const getAllPiecesOfColor = color => {
-    // returns array of object with piece and square
-    const pieces = [];
-    let i = 0;
-    while (i < 8) {
-      let j = 0;
-      while (j < 8) {
-        const piece = getPiece([i, j]);
-        if (piece && piece.color === color) {
-          piece.square = [i, j];
-          pieces.push(piece);
-        }
-        j += 1;
-      }
-      i += 1;
-    }
-
-    return pieces;
   };
 
   const isEmpty = position => {
@@ -164,19 +176,19 @@ const boardFactory = () => {
 
   return {
     board,
+    getPiece,
+    getKing,
+    getKingSquare,
+    getAllPiecesOfColor,
+    getEnPassantSquare,
+    createSave,
     placePiece,
     resetPiece,
     movePiece,
     removePiece,
-    getPiece,
-    grabKing,
-    findKingSquare,
-    getAllPiecesOfColor,
     isEmpty,
     isSquareInbounds,
-    resetBoard,
-    createSave,
-    findEnPassantSquare
+    resetBoard
   };
 };
 

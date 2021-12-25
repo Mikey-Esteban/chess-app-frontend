@@ -57,6 +57,10 @@ const gameFactory = () => {
     return halfMoveCount;
   };
 
+  const getLastFen = () => {
+    return fens.at(-1);
+  };
+
   // returns pawn to promote if pawn is at end of board
   const getPawnToPromote = player => {
     const allPieces = gameboard.getAllPiecesOfColor(player);
@@ -116,6 +120,26 @@ const gameFactory = () => {
 
     return goodMoves;
   };
+
+  // get start and end node by best_move
+  const getStartAndEndFromMove = move => {
+      let start = move.substring(0,2)
+      let end = move.substring(2)
+    return [start, end]
+  }
+
+  // get board positoin from algebraic notation
+  const getBoardPosFromNotation = notation => {
+    const letter = notation[0].toLowerCase()
+    const numPosition = parseInt(notation[1]) - 1
+    const letterPosition = letter.charCodeAt(0) - 97
+
+    // translate to board
+    let firstPosition = Math.abs(numPosition - 7)
+    let secondPosition = letterPosition
+
+    return [ firstPosition, secondPosition ]
+  }
 
   ///////////////////////////
   ////// SETTERS ///
@@ -222,7 +246,7 @@ const gameFactory = () => {
   // if player is checked
   const isChecked = player => {
     let checked = false;
-    const playerKing = gameboard.grabKing(player);
+    const playerKing = gameboard.getKing(player);
 
     const allMoves = _getAllMovesByPlayer(_getOpponentColor(player));
     allMoves.forEach(piece => {
@@ -396,7 +420,7 @@ const gameFactory = () => {
     if (diff === 2) {
       piece.isEnPassantAble = true;
       // grab enPassantSquare && note
-      const enPassantSquare = gameboard.findEnPassantSquare(start, end);
+      const enPassantSquare = gameboard.getEnPassantSquare(start, end);
       note = notation.squareToNote(enPassantSquare);
     }
     return [enPassantCapture, note];
@@ -423,7 +447,7 @@ const gameFactory = () => {
 
   // if playing move leads to check
   const _doesMoveLeadToCheck = (piece, start, end) => {
-    const king = gameboard.grabKing(currentPlayer);
+    const king = gameboard.getKing(currentPlayer);
 
     // grab old values
     gameboard.board[start[0]][start[1]] = null;
@@ -563,13 +587,16 @@ const gameFactory = () => {
     getPawnToPromote,
     getIsUpBy,
     getGoodPieceMoves,
+    getStartAndEndFromMove,
+    getBoardPosFromNotation,
     promotePawnTo,
     clearEnPassantables,
     changePlayerTurn,
     canMoveWithMessage,
     anyMovesLeft,
     playMove,
-    isChecked
+    isChecked,
+    getLastFen
   };
 
   return obj;
