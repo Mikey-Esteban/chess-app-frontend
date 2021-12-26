@@ -5,16 +5,18 @@ const Wrapper = styled.div`
   display: flex;
   flex-direction: column;
   align-items: center;
+
+  margin-left: 2rem;
 `;
 
 const ULWrapper = styled.ul`
   list-style-type: none;
-  width: 300px;
-  max-height: 450px; /*The important part*/
+  width: 250px;
+  max-height: 250px; /*The important part*/
   overflow-y: auto; /*Also...*/
   overflow-x: hidden; /*And the end of the important part*/
 
-  font-size: 12px;
+  font-size: .6rem;
   li:nth-child(odd) {
     background: #efefef;
   }
@@ -33,23 +35,12 @@ const LIWrapper = styled.li`
   }
 
   .move:hover {
-    background: rgb(227, 195, 65);
+    background: rgb(255,223,93);
   }
 `;
 
 const Notation = ({ data, handleNotationClick }) => {
   let moves = [];
-
-  // const handleClick = e => {
-  //   let li = e.target.parentNode;
-  //   let moveCount = li.querySelector(".moveCount").textContent;
-  //   // grab number on class
-  //   let moveClasses = e.target.classList[1];
-  //   let boardNumber = moveClasses.slice(-1);
-  //   console.log("BOARD NUMBER", boardNumber);
-  //
-  //   console.log(`ok: ${moveCount} ${boardNumber}`);
-  // };
 
   for (const property in data) {
     const thing = (
@@ -68,7 +59,7 @@ const Notation = ({ data, handleNotationClick }) => {
 
   return (
     <Wrapper>
-      Moves
+      {moves.length > 0 && <p>Moves</p>}
       <ULWrapper>{moves}</ULWrapper>
     </Wrapper>
   );

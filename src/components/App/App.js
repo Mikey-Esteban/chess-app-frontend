@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import styled from "styled-components";
 import axios from 'axios'
 
+import { Button } from '../../components'
 import "./App.css";
 
 // sounds
@@ -28,11 +29,23 @@ const chessPieceEatAudio = new Audio(chessPieceEat);
 const isCheckAudio = new Audio(isCheck);
 const isCheckErrorAudio = new Audio(isCheckError);
 
-const MARGIN_TOP = "100px";
 const BOX_SIZE = 60;
 
 const Wrapper = styled.div`
-  margin-left: 100px;
+  margin-left: 3rem;
+
+  #moveMessage {
+    margin: 1rem;
+    font-size: .7rem;
+  }
+
+  .buttonsWrapper {
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    gap: 1rem;
+    padding-top: 1rem;
+  }
 `;
 
 const WhitePlayerBoardWrapper = styled.div`
@@ -58,8 +71,8 @@ const BlackPlayerBoardWrapper = styled.div`
 const MainWrapper = styled.div`
   display: flex;
   flex-direction: row;
-
   min-width: 1000px;
+
 `;
 
 const App = () => {
@@ -182,7 +195,7 @@ const App = () => {
   //// NEW GAME BUTTON UI
   ////////////////
 
-  const handleButtonClick = () => {
+  const handleNewGameClick = () => {
     game = gameFactory();
     setCurrentPlayer(game.getCurrentPlayer());
     setIsChecked(false);
@@ -317,7 +330,7 @@ const App = () => {
       isCheckAudio.play();
       let result = game.anyMovesLeft(opponent);
       if (!result) {
-        setMessage(`CONGRATS, PLAYER ${currentPlayer} WINS`);
+        setMessage(`CONGRATS, PLAYER ${currentPlayer.toUpperCase()} WINS`);
         setIsGameOver(true);
       }
     }
@@ -332,16 +345,25 @@ const App = () => {
   const checkPythonMove = () => {
     axios.get(`http://127.0.0.1:5000/fen/${fenWithPeriods()}`)
       .then(resp => {
+        // api result of best move
         const bestMove = resp.data.best_move
-        console.log(game.getStartAndEndFromMove(bestMove))
+        // deconstruct notation
         let [ startNote, endNote ] = game.getStartAndEndFromMove(bestMove)
+        // grab board position of notations
         let startPos = game.getBoardPosFromNotation(startNote)
         let endPos = game.getBoardPosFromNotation(endNote)
+        // grab piece
         const piece = game.getGameboard().getPiece(startPos)
         console.log('PIECE', piece)
         console.log('GAMEBOARD START END', startPos, endPos)
-        playTurn(piece, startPos, endPos, 'uhhhh')
+        const strStartPos = game.getGameboard().getStrRepresentation(startPos)
+        const strEndPos = game.getGameboard().getStrRepresentation(endPos)
 
+        // play turn
+        playTurn(piece, startPos, endPos, `computer played move ${bestMove}`)
+        // update active square UI
+        setActiveStartSquare(strStartPos)
+        setActiveLandSquare(strEndPos)
       })
       .catch(error => console.log(error))
     // window.open(`http://127.0.0.1:5000/fen/${fenWithPeriods()}`)
@@ -350,10 +372,9 @@ const App = () => {
 
   return (
     <Wrapper>
-      <div id="currentPlayer">
-        {toTitleCase(`${currentPlayer} turn to move`)}
-        <button onClick={handleButtonClick}>New Game</button>
-        <button onClick={checkPythonMove}>press me</button>
+      <div id="currentPlayer" className="buttonsWrapper">
+        <Button handleClick={handleNewGameClick} text={'New Game'} />
+        <Button primary={true} handleClick={checkPythonMove} text={'play best move'} />
       </div>
       <div id="moveMessage">{message}</div>
       <BlackPlayerBoardWrapper>

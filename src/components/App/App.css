@@ -12,8 +12,9 @@ body {
   font-family: "Roboto", sans-serif;
   font-family: "Roboto Mono", monospace;
   font-size: 16px;
-  font-weight: 600;
+  font-weight: 300;
+  letter-spacing: .05rem;
 
   color: #495057;
-  background-color: #e9e9ea;
+  /* background-color: #e9e9ea; */
 }

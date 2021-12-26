@@ -83,6 +83,11 @@ const boardFactory = () => {
     return pieces;
   };
 
+  // returns str representation of board, for activesquares
+  const getStrRepresentation = board => {
+    return `[${board[0]}][${board[1]}]`
+  }
+
   ///////////////////
   /// SETTERS ////
   //////////
@@ -181,6 +186,7 @@ const boardFactory = () => {
     getKingSquare,
     getAllPiecesOfColor,
     getEnPassantSquare,
+    getStrRepresentation,
     createSave,
     placePiece,
     resetPiece,
