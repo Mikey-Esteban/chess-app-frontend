@@ -32,21 +32,28 @@ const isCheckErrorAudio = new Audio(isCheckError);
 const BOX_SIZE = 60;
 
 const Wrapper = styled.div`
-  margin-left: 3rem;
+  padding-left: 3rem;
 
   #moveMessage {
+    width: 400px;
     margin: 1rem;
-    font-size: .7rem;
+    font-size: .9rem;
   }
 
   .buttonsWrapper {
-    width: 100%;
     display: flex;
-    justify-content: center;
+    justify-content: flex-start;
     gap: 1rem;
     padding-top: 1rem;
+    margin-right: 1rem;
   }
 `;
+
+const Header = styled.div`
+  width: 800px;
+  display: flex;
+  justify-content: space-around;
+`
 
 const WhitePlayerBoardWrapper = styled.div`
   display: flex;
@@ -238,7 +245,6 @@ const App = () => {
     setMessage("click on most recent move to unpause game.");
 
     if (index === game.getMemory().length - 1) {
-      console.log("hi");
       setPause(false);
       setMessage("Continue playing!");
     }
@@ -267,7 +273,7 @@ const App = () => {
     if (flag) {
       playTurn(piece, start, end, message);
     } else {
-      if (message === "that move leads to check!!") {
+      if (message.includes('Leads to check!!')) {
         isCheckErrorAudio.play();
         showErrorSquare = true;
       }
@@ -372,11 +378,13 @@ const App = () => {
 
   return (
     <Wrapper>
-      <div id="currentPlayer" className="buttonsWrapper">
-        <Button handleClick={handleNewGameClick} text={'New Game'} />
-        <Button primary={true} handleClick={checkPythonMove} text={'play best move'} />
-      </div>
-      <div id="moveMessage">{message}</div>
+      <Header>
+        <div id="moveMessage">{message}</div>
+        <div id="currentPlayer" className="buttonsWrapper">
+          <Button primary={true} handleClick={checkPythonMove} text={'play best move'} />
+          <Button handleClick={handleNewGameClick} text={'New Game'} />
+        </div>
+      </Header>
       <BlackPlayerBoardWrapper>
         <Eats id="blackEats" array={blackPlayerEats} />
         <div id="blackScore">{game.getIsUpBy("black")}</div>

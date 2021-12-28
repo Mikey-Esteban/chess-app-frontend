@@ -285,6 +285,8 @@ const gameFactory = () => {
 
   // returns array `[boolean, message]` if move is legal & message
   const canMoveWithMessage = (piece, start, end) => {
+    let opponent;
+    currentPlayer === 'white' ? opponent = 'Black' : opponent = 'White' ;
     // check if trying to castle
     if (piece.type === "king" && Math.abs(start[1] - end[1]) === 2) {
       const squaresCanCastleTo = _canCastleTo(currentPlayer);
@@ -292,21 +294,21 @@ const gameFactory = () => {
         return square[0] === end[0] && square[1] === end[1];
       });
       if (filtered.length > 0) {
-        return [true, "castling!"];
+        return [true, `Castling! ${opponent} to move`];
         // castle
       } else {
-        return [false, "you can't castle there"];
+        return [false, `Can't castle there! ${currentPlayer} try again.`];
       }
     }
 
     const flag = _doesMoveLeadToCheck(piece, start, end);
 
     if (_isMoveValid(piece, start, end) && !flag) {
-      return [true, "good move!"];
+      return [true, `Good move! ${opponent} to move.`];
     } else if (flag) {
-      return [false, "that move leads to check!!"];
+      return [false, `Leads to check!! ${currentPlayer} try again.`];
     } else {
-      return [false, "sorry can't play move"];
+      return [false, `Sorry can't play move!! ${currentPlayer} try again.`];
     }
   };
 
